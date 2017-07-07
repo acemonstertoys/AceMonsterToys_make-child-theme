@@ -162,17 +162,30 @@ function rfid_for_user( $user_id ) { #API2
   return $rfid; 
 }
 
+function get_expiration_schedule() {
+  $time = time();
+  echo $time . "\n";
+  //$next_scheduled = wp_next_scheduled( 'amt_expire_user_role' );
+  //if (! $next_scheduled || $next_scheduled < $time) {
+  //  wp_schedule_event($time, 'hourly', 'amt_expire_user_role');
+  //}
+  return wp_next_scheduled( 'amt_expire_user_role' );
+  //return expire_user_role();
+}
+
 // Loop over all users, find someone whose membership has expired, 
 // then if they are 'author' or 'customer', set their role to 'subscriber' instead
 function expire_user_role() {
-/*    if (! wp_next_scheduled ( 'amt_expire_user_role' )) {
+    if (! wp_next_scheduled ( 'amt_expire_user_role' )) {
         wp_schedule_event(time(), 'hourly', 'amt_expire_user_role');
-    }*/
+    }
 
   // Get the list of valid membership plans
   $plan_slugs = membership_plan_slugs();
 
   $out = array();
+
+  @file_get_contents("http://acemonstertoys.org/tmp-logger/logger.php?called=1");
 
   foreach(get_users() as $user) {
     $activePlan = false;
@@ -214,6 +227,7 @@ function expire_user_role() {
             $user->set_role('author');
             // log it on the admin site
             @file_get_contents("http://acemonstertoys.org/member/changerole.php?up=1&msg=".urlencode($user->user_email));
+            @file_get_contents("http://acemonstertoys.org/tmp-logger/logger.php?up=1&msg=".urlencode($user->user_email));
             continue;
         }
         // active membership, active role -> skip
@@ -235,6 +249,7 @@ function expire_user_role() {
 
         // log it on the admin site
         @file_get_contents("http://acemonstertoys.org/member/changerole.php?down=1&msg=".urlencode($user->user_email));
+        @file_get_contents("http://acemonstertoys.org/tmp-logger/logger.php?down=1&msg=".urlencode($user->user_email));
     }
   }
 
@@ -511,15 +526,15 @@ add_action( 'rest_api_init', function () {
   ) ); 
 
  // uncomment to test the expire-all-users logic remotely and see results
-/* register_rest_route( 'amt/v1', '/user/expireALL', array(
+register_rest_route( 'amt/v1', '/user/expireALL', array(
     'methods' => 'GET',
     'callback' => 'expire_user_role'
-) ); */
+) );
 } );
 
 
 // Link action name to our function
-add_action('amt_expire_user_role', 'expire_user_role');
+add_action('amt_expire_user_role', 'expire_user_role', 10, 0);
 
 // Schedule our action when theme is activated
 function custom_amt_activation($oldname, $oldtheme=false) {
