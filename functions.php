@@ -162,6 +162,17 @@ function rfid_for_user( $user_id ) { #API2
   return $rfid; 
 }
 
+function get_expiration_schedule() {
+  $time = time();
+  echo $time . "\n";
+  //$next_scheduled = wp_next_scheduled( 'amt_expire_user_role' );
+  //if (! $next_scheduled || $next_scheduled < $time) {
+  //  wp_schedule_event($time, 'hourly', 'amt_expire_user_role');
+  //}
+  return wp_next_scheduled( 'amt_expire_user_role' );
+  //return expire_user_role();
+}
+
 // Loop over all users, find someone whose membership has expired, 
 // then if they are 'author' or 'customer', set their role to 'subscriber' instead
 function expire_user_role() {
@@ -173,6 +184,8 @@ function expire_user_role() {
   $plan_slugs = membership_plan_slugs();
 
   $out = array();
+
+@file_get_contents("http://acemonstertoys.org/tmp-logger/logger.php?called=3");
 
   foreach(get_users() as $user) {
     $activePlan = false;
@@ -214,6 +227,7 @@ function expire_user_role() {
             $user->set_role('author');
             // log it on the admin site
             @file_get_contents("http://acemonstertoys.org/member/changerole.php?up=1&msg=".urlencode($user->user_email));
+@file_get_contents("http://acemonstertoys.org/tmp-logger/logger.php?up=1&msg=".urlencode($user->user_email));
             continue;
         }
         // active membership, active role -> skip
@@ -235,6 +249,7 @@ function expire_user_role() {
 
         // log it on the admin site
         @file_get_contents("http://acemonstertoys.org/member/changerole.php?down=1&msg=".urlencode($user->user_email));
+@file_get_contents("http://acemonstertoys.org/tmp-logger/logger.php?down=1&msg=".urlencode($user->user_email));
     }
   }
 
@@ -453,6 +468,19 @@ function send_customer_invoice($request) { #API
 }
 
 
+// Check if current user has any past due orders
+function check_unpaid_orders() {
+    $orders = wc_get_orders(array(
+        'status'=>'wc-pending',
+        'customer'=>get_current_user_id()
+    ));
+    if(count($orders) > 0) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 
 
 // Map API URLs to PHP methods
@@ -492,11 +520,16 @@ add_action( 'rest_api_init', function () {
     'callback' => 'send_customer_invoice'
   ) ); 
 
+ register_rest_route( 'amt/v1', '/expiration_schedule', array(
+    'methods' => 'GET',
+    'callback' => 'get_expiration_schedule'
+  ) ); 
+
  // uncomment to test the expire-all-users logic remotely and see results
-/* register_rest_route( 'amt/v1', '/user/expireALL', array(
+ register_rest_route( 'amt/v1', '/user/expireALL', array(
     'methods' => 'GET',
     'callback' => 'expire_user_role'
-) ); */
+) ); 
 } );
 
 
@@ -540,7 +573,7 @@ function skills_taxonomy() {
   $labels = array(
     'name'                       => _x( 'Skills', 'Taxonomy General Name', 'text_domain' ),
     'singular_name'              => _x( 'Skill', 'Taxonomy Singular Name', 'text_domain' ),
-    'menu_name'                  => __( 'Taxonomy', 'text_domain' ),
+    'menu_name'                  => __( 'Skills', 'text_domain' ),
     'all_items'                  => __( 'All Items', 'text_domain' ),
     'parent_item'                => __( 'Parent Item', 'text_domain' ),
     'parent_item_colon'          => __( 'Parent Item:', 'text_domain' ),
@@ -668,12 +701,128 @@ return $amt_profile_link;
 
 // extending author abilities for skills tags
 
-function allow_author_to_manage_categories()
-{
-  $user_role = 'author';
-  $author    = get_role($user_role):
-  $author->add_cap('manage_categories');
+
+function add_theme_caps() {
+    // gets the author role
+    $role = get_role( 'author' );
+ 
+    // This only works, because it accesses the class instance.
+    // would allow the author to edit others' posts for current theme only
+    $role->add_cap( 'manage_categories' );
 }
-add_action('init', 'allow_author_to_manage_categories');
+add_action( 'admin_init', 'add_theme_caps');
+
+
+/* -------------------------------------------------------------
+ * - Create AMT Profile When Adding A New User -
+ * ------------------------------------------------------------- */
+
+// Execute theme_create_amt_profile function when a new user is registered
+add_action( 'user_register', 'theme_create_amt_profile' );
+
+function theme_create_amt_profile( $user_id ) {
+  // Get the info of the new user
+  $user_info = get_userdata( $user_id );
+  
+  // Get the First Name + Last Name of the New User
+  // If this info is not already on get_userdata, get it from the _POST info
+  $name = ( $user_info->first_name ) ? $user_info->first_name . ' ' . $user_info->last_name : $_POST['billing_first_name'] . ' ' . $_POST['billing_last_name'];
+  
+  // Insert new AMT Profile entry
+  wp_insert_post( array(
+    'post_author' => $user_id,
+    'post_title' => $name,
+    'post_status' => 'publish',
+    'post_type' => 'amt_profile',
+  ) );
+}
+
+/* -------------------------------------------------------------
+ * - Hide profile fields for everybody but adims -
+ * ------------------------------------------------------------- */
+
+add_action( 'admin_enqueue_scripts', 'theme_hide_profile_fields' );
+
+function theme_hide_profile_fields(){
+  if( ! current_user_can('administrator') ) {
+?>
+    <style type="text/css">
+    .user-rich-editing-wrap,
+    .user-admin-color-wrap,
+    .user-comment-shortcuts-wrap,
+    .show-admin-bar.user-admin-bar-front-wrap,
+    .user-url-wrap,
+    .user-profile-picture{
+      display: none;
+    }
+    </style>
+<?php
+  }
+}
+
+/* -------------------------------------------------------------
+ * - Abandoned Orders -
+ * ------------------------------------------------------------- */
+function your_function( $user_login, $user ) {
+  delete_user_meta( $user->ID, '_woocommerce_abandoned_orders_last_reminder' );
+}
+add_action('wp_login', 'your_function', 10, 2);
+
+add_action( 'init', 'theme_abandoned_orders_init' );
+
+function theme_abandoned_orders_init() {
+  if ( is_user_logged_in() ) {
+    $pending_orders = get_posts( array(
+       'posts_per_page' => -1,
+       'meta_key'    => '_customer_user',
+       'meta_value'  => get_current_user_id(),
+       'post_type'   => 'shop_order',
+       'post_status' => 'wc-pending',
+    ) );
+    
+    if ( count ( $pending_orders ) > 0 ) {
+      
+      $last_reminder = get_user_meta( get_current_user_id(), '_woocommerce_abandoned_orders_last_reminder', true );
+      if ( ! $last_reminder ) {
+        $last_reminder = 0;
+      }
+      
+      $last_reminder = $last_reminder + ( 60 * 60 * 24 * 1 );
+      
+      if ( time() > $last_reminder ) {
+        theme_abandoned_cart_init();
+      }
+    }
+  }
+}
+
+function theme_abandoned_cart_init(){
+  add_action( 'wp_enqueue_scripts', 'theme_abandoned_cart_enqueue_scripts' );
+  add_action( 'wp_footer', 'theme_abandoned_cart_print_html' ); 
+}
+
+function theme_abandoned_cart_enqueue_scripts(){
+  wp_enqueue_script( 'lity', get_stylesheet_directory_uri() . '/libraries/lity/lity.min.js', array( 'jquery' ), null, true );
+  wp_enqueue_style( 'lity', get_stylesheet_directory_uri() . '/libraries/lity/lity.min.css', array(), null );
+}
+
+function theme_abandoned_cart_print_html(){
+  $current_user = wp_get_current_user();
+?>
+  <div id="abandoned-cart-reminder" style="background:#fff" class="lity-hide">
+    <div id="cart-reminder">
+      <h2 id="cart-reminder-title">Hello <span><?php echo $current_user->display_name; ?></span>!</h2>
+      <p>We've notice you have an unpaid bill.</p>
+      <p>Please <a href="/my-account/orders/">go to your account</a> to complete your order(s).</p>
+    </div>
+  </div>
+  <script type="text/javascript">
+  jQuery(document).ready(function($){
+    var lightbox = lity( '#abandoned-cart-reminder' );
+  });
+  </script>
+<?php
+  update_user_meta( get_current_user_id(), '_woocommerce_abandoned_orders_last_reminder', time() );
+}
 
 ?>
