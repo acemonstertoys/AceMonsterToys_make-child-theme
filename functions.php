@@ -250,7 +250,7 @@ function is_member($rfid, $opts = array())
 // Find user ID associated with rfid
 function find_member_ids_from_rfid($rfid)
 { #API2
-  $args = array( 'meta_key' => 'member_rfid', 'meta_value' => trim($rfid) );
+  $args = array( 'meta_key' => 'member_rfid', 'meta_value' => $rfid );
     $user_query = new WP_User_Query($args);
     $ids = array();
 
@@ -305,7 +305,6 @@ function rfid_status($request)
     $rfid = $request->get_params('id');
     //still handle one rfid assigned to multiple users
     $user_ids = find_member_ids_from_rfid($rfid);
-
     foreach ($user_ids as $user_id) {
         if (is_member_active($user_id)) {
             $success = true;
@@ -346,28 +345,25 @@ function checkcerts($request)
     $requestobj = get_user_for_rfid($request);
     $returnData->active =  rfid_status_int($request[id]);
     if (strstr($requestobj, 'Could not find')) {
-        $returnData->name = 'could_not_find';
-        $returnData->id = 'could_not_find';
-        $returnData->certs = 'could_not_find';
-        $returnData->email = 'could_not_find';
+        $returnData->name = 'not_found';
+        $returnData->certs = 'not_found';
+        // $returnData->to_vend = 'not_found';
     } else {
         $returnData->name = get_user_by('id', $requestobj['ID'])->first_name." ".get_user_by('id', $requestobj['ID'])->last_name;
-        $returnData->id = $requestobj['ID'];
         $returnData->certs = get_field('has_taken_laser_class', 'user_'.$requestobj['ID']);
-        $returnData->email = get_user_by('id', $requestobj['ID'])->user_email;
         $newQuery = wc_get_orders(array(
       'customer' => $requestobj['ID'],
       'status' => 'to-vend'
     ));
-        $orders = array();
-        if ($newQuery) {
-            foreach ($newQuery as $key => $value) {
-                array_push($orders, $value->id);
-            }
-            $returnData->to_vend = $orders;
-        } else {
-            $returnData->to_vend = 'no-vend-order';
-        }
+        // $orders = array();
+        // if ($newQuery) {
+        //     foreach ($newQuery as $key => $value) {
+        //         array_push($orders, $value->id);
+        //     }
+        //     $returnData->to_vend = $orders;
+        // } else {
+        //     $returnData->to_vend = 'no-vend-order';
+        // }
     }
 
     return $returnData;
@@ -380,55 +376,60 @@ function get_vendable_orders($request)
   }
     $requestobj = get_user_for_rfid($request);
     if (strstr($requestobj, 'Could not find')) {
-        $returnData->name = 'could_not_find';
-        $returnData->id = 'could_not_find';
-        $returnData->certs = 'could_not_find';
-        $returnData->email = 'could_not_find';
+        $returnData->name = 'not_found';
+        $returnData->to_vend = 'no-orders';
+        $returnData->disbursed = 'no-orders';
     } else {
         $returnData->name = get_user_by('id', $requestobj['ID'])->first_name." ".get_user_by('id', $requestobj['ID'])->last_name;
-        $newQuery = wc_get_orders(array(
+        $vendQuery = wc_get_orders(array(
       'customer' => $requestobj['ID'],
       'status' => 'to-vend'
     ));
-        $orders = array();
-        if ($newQuery) {
-            foreach ($newQuery as $key => $value) {
-                array_push($orders, $value->id);
+        $vendOrders = array();
+        if ($vendQuery) {
+            foreach ($vendQuery as $key => $value) {
+                array_push($vendOrders, $value->id);
             }
-            $returnData->to_vend = $orders;
+            $returnData->to_vend = $vendOrders;
         } else {
-            $returnData->to_vend = 'no-vend-order';
+            $returnData->to_vend = 'no-orders';
         }
+        $disbursedQuery = wc_get_orders(array(
+      'customer' => $requestobj['ID'],
+      'status' => 'disbursed'
+    ));
+        $disbOrders = array();
+        if ($disbursedQuery) {
+            foreach ($disbursedQuery as $key => $value) {
+                array_push($disbOrders, $value->id);
+            }
+            $returnData->disbursed = $disbOrders;
+        } else {
+            $returnData->disbursed = 'no-orders';
+        }
+
     }
 
     return $returnData;
 }
 
-function view_vendable_order($request)
+function view_vend_order($request)
 {
   if (!validate_request($request)) {
       return invalid_request_response();
   }
     $order = wc_get_order($request[order_id]);
     if ( $order==false ) {
+      $returnData->items = 'could_not_find_order';
       $returnData->status = 'could_not_find_order';
       return $returnData;
-    } elseif ($order->get_status()=='to-vend') {
+    } elseif ($order->get_status()) {
       $returnData->items = array();
         foreach ($order->get_items() as $item_id => $item_data) {
-            $next_item = array();
-            array_push($next_item, $item_data['name']);
-            $product = wc_get_product($item_data['product_id']);
-            array_push($returnData->items, $next_item);
+            array_push($returnData->items, $item_data['name']);
         }
-        $returnData->status = 'ready-to-vend';
+        $returnData->status = $order->get_status();
 
-      return $returnData;
-    } elseif ($order->get_status()=='disbursed') {
-      $returnData->status = 'already_disbursed';
-      return $returnData;
-    } else {
-      $returnData->status = 'could_not_find_order';
       return $returnData;
     }
 }
@@ -463,6 +464,32 @@ function disburse_vendable_order($request)
       $returnData->status = 'could_not_find_order';
       return $returnData;
     }
+}
+
+function get_product_info($request)
+{
+  if (!validate_request($request)) {
+      return invalid_request_response();
+  }
+    //
+    // Built current list of vending items
+    //
+    $vend_items = array();
+    $the_query = new WP_Query(array( 'product_cat' => 'vend-item' ));
+    while ($the_query->have_posts()) {
+        $the_query->the_post();
+        $product = wc_get_product(get_the_ID());
+        $vend_bay = $product->get_attribute('vend_bay');
+        if($vend_bay == $request['vend_bay']) {
+          $returnData->vend_bay = $vend_bay;
+          $returnData->title = $product->get_title();
+          $returnData->image_url = $product->get_image();
+          $returnData->desc =  $product->get_description();
+          return $returnData;
+        }
+    }
+    return "Couldn't find that bay";
+
 }
 
 function get_expiration_schedule()
@@ -839,19 +866,24 @@ add_action('rest_api_init', function () {
     'callback' => 'get_user_for_rfid'
   ));
 
-    register_rest_route('amt/v1', '/vend/(?P<id>[a-zA-Z0-9]*10)', array(
+    register_rest_route('amt/v1', '/vend/(?P<id>[a-zA-Z0-9]+)', array(
     'methods' => 'GET',
     'callback' => 'get_vendable_orders'
   ));
 
-    register_rest_route('amt/v1', '/vend/(?P<order_id>[0-9]+)/view', array(
+    register_rest_route('amt/v1', '/vend/view/(?P<order_id>[0-9]+)', array(
     'methods' => 'GET',
-    'callback' => 'view_vendable_order'
+    'callback' => 'view_vend_order'
   ));
 
-    register_rest_route('amt/v1', '/vend/(?P<order_id>[0-9]+)/disburse', array(
+    register_rest_route('amt/v1', '/vend/disburse/(?P<order_id>[0-9]+)', array(
     'methods' => 'GET',
     'callback' => 'disburse_vendable_order'
+  ));
+
+    register_rest_route('amt/v1', '/vend/get_info/(?P<vend_bay>[a-zA-Z0-9]+)', array(
+    'methods' => 'GET',
+    'callback' => 'get_product_info'
   ));
 
     register_rest_route('amt/v1', '/user/count', array(
