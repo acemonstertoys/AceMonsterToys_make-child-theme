@@ -282,11 +282,13 @@ function membership_plan_slugs()
 }
 
 // Check if a given user ID is active or not
-function is_member_active($user_id)
+function is_member_active($user_id, $slugs=null)
 { #API2
-  $active = false;
+    $active = false;
+    if(!$slugs)
+        $slugs = membership_plan_slugs();
 
-    foreach (membership_plan_slugs() as $slug) {
+    foreach ($slugs as $slug) {
         if (wc_memberships_is_user_active_member($user_id, $slug)) {
             $active = true;
         }
@@ -675,6 +677,33 @@ function active_rfids($request)
     return $out;
 }
 
+// Returns list of all rfids that are active and have a given certification
+// Requires auth
+// input: cert=certification id
+// output: [ "OK", ["0123ABC", "0123ABC" ], "cert" ]
+function get_cert_rfids($request) {
+  if (!validate_request($request)) {
+      return invalid_request_response();
+  }
+
+    $slugs = membership_plan_slugs();
+    $rfids = [];
+    $cert = $request['cert'];
+    foreach (get_users() as $user) {
+        $user_id = $user->ID;
+        if (is_member_active($user_id, $slugs)) {
+            $rfid = rfid_for_user($user_id);
+            if (!empty($rfid)) {
+                $certs = get_field('has_taken_laser_class', 'user_'.$user_id);
+                if(in_array($cert, $certs))
+                    array_push($rfids, $rfid);
+            }
+        }
+    }
+
+    return ["OK", $rfids, $cert];
+}
+
 // Counts the number of active, inactive, and operator users
 function count_active_users($request)
 { #API
@@ -843,6 +872,20 @@ function check_unpaid_orders()
 }
 
 
+// Logs an rfid action
+// input:
+// RFID         10-digit RFID tag
+// timestamp        date/time of the log record
+// device           the device from the <certs> list
+// action           list of actions taken by the fobbox
+// value            value associated with that action
+//
+function log_rfid($request) {
+
+    return "OK";
+}
+
+
 // Map API URLs to PHP methods
 add_action('rest_api_init', function () {
 
@@ -859,6 +902,16 @@ add_action('rest_api_init', function () {
     register_rest_route('amt/v1', '/rfids/active', array(
     'methods' => 'GET',
     'callback' => 'active_rfids'
+  ));
+
+    register_rest_route('amt/v1', '/rfids/cert/(?P<cert>[a-zA-Z0-9]+)', array(
+    'methods' => 'GET',
+    'callback' => 'get_cert_rfids'
+  ));
+
+    register_rest_route('amt/v1', '/rfids/log', array(
+    'methods' => 'POST',
+    'callback' => 'log_rfid'
   ));
 
     register_rest_route('amt/v1', '/rfid/(?P<id>[a-zA-Z0-9]+)/user', array(
