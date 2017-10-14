@@ -874,15 +874,99 @@ function check_unpaid_orders()
 
 // Logs an rfid action
 // input:
-// RFID         10-digit RFID tag
+// rfid         10-digit RFID tag
 // timestamp        date/time of the log record
 // device           the device from the <certs> list
 // action           list of actions taken by the fobbox
 // value            value associated with that action
 //
 function log_rfid($request) {
+    global $wpdb;
+    global $amt_db_version;
 
-    return "OK";
+  if (!validate_request($request)) {
+      return invalid_request_response();
+  }
+
+    $installed_ver = get_option('amt_db_version');
+    $installed = amt_db_install();
+
+    $userid = find_member_ids_from_rfid($request['rfid']);
+
+    $table_name = $wpdb->prefix . 'amt_rfid_log';
+
+$wpdb->query( $wpdb->prepare( 
+    "
+        INSERT INTO $table_name
+        ( timestamp, rfid, userid, device, action, value )
+        VALUES ( FROM_UNIXTIME(%d), %s, %d, %s, %s, %s )
+    ", 
+        $request['timestamp'],
+        $request['rfid'],
+        $userid,
+        $request['device'],
+        urldecode($request['action']),
+        urldecode($request['value'])
+) );
+
+    $id = $wpdb->insert_id;
+
+    $out = [
+        $id,
+        $request['rfid'],
+        $request['timestamp'],
+        $request['device'],
+        urldecode($request['action']),
+        urldecode($request['value']),
+        $userid,
+        $installed,
+        $amt_db_version,
+        $installed_ver,
+        $table_name
+
+        ];
+    return $out;
+}
+
+
+global $amt_db_version;
+$amt_db_version = '1.0';
+
+function amt_db_install() {
+    global $wpdb;
+    global $amt_db_version;
+
+    $installed_ver = get_option('amt_db_version');
+
+    if($installed_ver != $amt_db_version) {
+
+        $table_name = $wpdb->prefix . 'amt_rfid_log';
+        
+        $charset_collate = $wpdb->get_charset_collate();
+
+        $sql = "CREATE TABLE $table_name (
+            id int(9) NOT NULL AUTO_INCREMENT,
+            timestamp datetime NOT NULL,
+            rfid varchar(20),
+            userid int(9),
+            device varchar(100),
+            action varchar(1000),
+            value varchar(1000),
+            PRIMARY KEY  (id),
+            KEY timestamp_i (timestamp),
+            KEY rfid_i (rfid),
+            KEY userid_i (userid)
+        ) $charset_collate;";
+
+        require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+        $res = dbDelta( $sql );
+
+        update_option( 'amt_db_version', $amt_db_version );
+
+        return $res;
+    }
+
+    return false;
 }
 
 
@@ -909,8 +993,8 @@ add_action('rest_api_init', function () {
     'callback' => 'get_cert_rfids'
   ));
 
-    register_rest_route('amt/v1', '/rfids/log', array(
-    'methods' => 'POST',
+    register_rest_route('amt/v1', '/rfid/log/(?P<rfid>[a-zA-Z0-9]+)/(?P<timestamp>[0-9]+)/(?P<device>[a-zA-Z0-9_-]+)/(?<action>.+)/(?<value>.+)', array(
+    'methods' => 'GET',
     'callback' => 'log_rfid'
   ));
 
