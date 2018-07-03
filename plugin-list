@@ -13,6 +13,7 @@ Follow-ups Emails
   Controls all our automated emails including those in the sign up and billign workflows
 MailChimp for WooCommerce Memberships
   Integration between our membership user data base and our mailchimp
+  Status: Inactive. It was taking too much resources with the rest of the plugins, and this ended in WC Subscriptions throwing a 502 server error when trying to update a membership status.
 Make Plus
   Add premium features to our theme
 Meetup Widgets
