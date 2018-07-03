@@ -1,0 +1,37 @@
+This is a list of plugins we are running, their uses and use type (always active only active when used)
+
+Advanced Custom Fields Pro - Active
+  Adds user specific and admin fields for certification, rfid and so on
+Akismet Anti-Spam - Active
+  Protects us from evil spam comments
+Appliation Passwords
+Aswesome Flickr Gallery
+BAW Login/Logout menu
+  Creates easy quick login/logout menu
+Custom Order Status for WooCommerce
+Follow-ups Emails
+  Controls all our automated emails including those in the sign up and billign workflows
+MailChimp for WooCommerce Memberships
+  Integration between our membership user data base and our mailchimp
+Make Plus
+  Add premium features to our theme
+Meetup Widgets
+Nav Menu Roles
+Our Team
+Regenerate Thumbnails
+Shortcode Widget
+User Role Editor
+Woocommerce
+Woocommerce colors
+WooCommerce Customer/Order CSV Export
+WooCommerce Google Anaylitics Integration
+WooCommerce Helper
+WooCommerce Memberships
+WooCommerce Name Your Price
+WooCommerce PDF Invoices
+WooCommerce Smart Coupons
+WooCommerce Stripe Gateway
+Wordpress Importer
+WP REST API
+WP REST API OAuth 1.0a Server
+WP Untimate CSV Importer Pro
