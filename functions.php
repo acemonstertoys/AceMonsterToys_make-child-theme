@@ -86,7 +86,7 @@ function signed_forms_html()
     $full_name = $first_name . " " . $last_name;
 
     $packet_url_data = array('amt-membership' => array('PowerFormId' => '7fa50c17-c7e1-4578-aefd-ac5261e64b33',
-                                                       'Member – Regular_UserName' => $full_name,
+                                                       'Member â€“ Regular_UserName' => $full_name,
                                                        'EnvelopeField_user_id' => $user_id,
                                                        'EnvelopeField_packet_name' => 'amt-membership',
                                                        'EnvelopeField_server_hostname' => $_SERVER['HTTP_HOST']),
@@ -96,12 +96,12 @@ function signed_forms_html()
                                                                    'EnvelopeField_packet_name' => 'bot-bot-program-membership',
                                                                    'EnvelopeField_server_hostname' => $_SERVER['HTTP_HOST']),
                              'monster-corps-membership' => array('PowerFormId' => '7fa50c17-c7e1-4578-aefd-ac5261e64b33',
-                                                                 'Member – Regular_UserName' => $full_name,
+                                                                 'Member â€“ Regular_UserName' => $full_name,
                                                                  'EnvelopeField_user_id' => $user_id,
                                                                  'EnvelopeField_packet_name' => 'monster-corps-membership',
                                                                  'EnvelopeField_server_hostname' => $_SERVER['HTTP_HOST']),
                              'ops-membership' => array('PowerFormId' => '7fa50c17-c7e1-4578-aefd-ac5261e64b33',
-                                                       'Member – Regular_UserName' => $full_name,
+                                                       'Member â€“ Regular_UserName' => $full_name,
                                                        'EnvelopeField_user_id' => $user_id,
                                                        'EnvelopeField_packet_name' => 'ops-membership',
                                                        'EnvelopeField_server_hostname' => $_SERVER['HTTP_HOST'])
@@ -118,6 +118,19 @@ function signed_forms_html()
 
     $html .= ('<div class="signed-forms">');
     $html .= ('<h2>Signed forms</h2>');
+	
+		if ( is_user_logged_in() ) {
+			$picture = get_user_meta( get_current_user_id(), 'amt_directory_picture', true );
+			
+			if ( ! $picture ) {
+		?>
+				<div class="notice">
+					You don't have a profile picture.
+					Please <a href="<?php echo site_url(); ?>/wp-admin/profile.php">set your profile picture</a>
+				</div>
+		<?php
+			}
+		}
 
 
     $all_packets_signed = true;
@@ -149,8 +162,8 @@ function signed_forms_html()
         }
 
         $date_display = "";
-        $smiley_emoji = "😀";
-        $sad_emoji = "✖️";
+        $smiley_emoji = ":D";
+        $sad_emoji = ":(";
         foreach ($dates_signed as $field_name => $date) {
             $pretty_field_name = $pretty_field_names[$field_name];
             if (is_null($date)) {
@@ -1308,7 +1321,9 @@ function theme_create_amt_profile($user_id)
 
     // Get the First Name + Last Name of the New User
     // If this info is not already on get_userdata, get it from the _POST info
-    $name = ($user_info->first_name) ? $user_info->first_name . ' ' . $user_info->last_name : $_POST['billing_first_name'] . ' ' . $_POST['billing_last_name'];
+    $name = ($user_info->first_name)
+		? $user_info->first_name . ' ' . substr( $user_info->last_name, 0, 1 )
+		: $_POST['billing_first_name'] . ' ' . substr( $_POST['billing_last_name'], 0, 1 );
 
     // Insert new AMT Profile entry
     wp_insert_post(array(
@@ -1447,4 +1462,12 @@ function theme_abandoned_cart_print_html()
   update_user_meta(get_current_user_id(), '_woocommerce_abandoned_orders_last_reminder', time());
 }
 
-?>
+add_action( 'wp_enqueue_scripts', function(){
+		wp_deregister_style( 'font-awesome' );
+		wp_register_style(
+			'font-awesome',
+			get_stylesheet_directory_uri() . '/css/libs/font-awesome/css/font-awesome.min.css',
+			array(),
+			'5.0.13'
+		);
+}, 20 );

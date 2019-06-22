@@ -1,0 +1,441 @@
+/**
+ * Theme Name:  Make (child theme)
+ * Theme URI:   https://thethemefoundry.com/make/
+ * Author:      The Theme Foundry
+ * Author URI:  https://thethemefoundry.com
+ * Description: Create your website without touching a line of code. Make's flexible customization features and a powerful drag and drop page builder make designing your site fun and easy. Build almost anything: a simple portfolio or photography site, an ecommerce business site, a minimalist blog, or even a professional magazine. You'll start by customizing your background, layouts, fonts, colors, and logo. Next, add and organize your content using the drag and drop page builder. Add a photo, a video, a gallery, or even a slider to any page on your website. Make is responsive, so your website will naturally look great on phones, tablets, and desktop screens. It's also fully compatible with popular plugins like WooCommerce, Gravity Forms, Contact Form 7, Jetpack, and WP PageNavi.
+ * Version:     1.1.0
+ * License:     GNU General Public License v2 or later
+ * License URI: http://www.gnu.org/licenses/gpl-2.0.html
+ * Template: make
+ * Text Domain: make-child
+ * Domain Path: /languages/
+ * Tags:        black, blue, green, gray, orange, red, white, yellow, dark, light, one-column, two-columns, three-columns, four-columns, left-sidebar, right-sidebar, fixed-layout, fluid-layout, responsive-layout, buddypress, custom-background, custom-colors, custom-header, custom-menu, editor-style, featured-images, flexible-header, full-width-template, sticky-post, theme-options, threaded-comments, translation-ready, photoblogging
+ *
+ * Make WordPress Theme, Copyright 2015 The Theme Foundry
+ * Make is distributed under the terms of the GNU GPL
+ */
+
+/*
+ * Add your custom styles below.
+ * This version of the Make child theme is only compatible with Make 1.6.0 and above.
+ */
+
+.menu-dazzle {
+	font-size: 12px;
+	font-weight: bold;
+	color: #03B32C;
+	padding-right: 4px
+}
+
+@media only screen and (max-width: 400px) {
+  h1 {
+    font-size: 3rem;
+  }
+}
+
+@media only screen and (min-width: 401px) and (max-width: 900px) {
+  h1 {
+    font-size: 36px;
+  }
+}
+
+/* Woo Our Team styles */
+.widget_woothemes_our_team .columns-2,
+.widget_woothemes_our_team .columns-3,
+.widget_woothemes_our_team .columns-4,
+.widget_woothemes_our_team .columns-5,
+.widget_woothemes_our_team .columns-6 {
+  overflow: hidden;
+  zoom: 1;
+}
+.widget_woothemes_our_team .columns-2 .team-member,
+.widget_woothemes_our_team .columns-3 .team-member,
+.widget_woothemes_our_team .columns-4 .team-member,
+.widget_woothemes_our_team .columns-5 .team-member,
+.widget_woothemes_our_team .columns-6 .team-member {
+  float: left;
+  margin-right: 3.8%;
+}
+.widget_woothemes_our_team .columns-2 .team-member.first,
+.widget_woothemes_our_team .columns-3 .team-member.first,
+.widget_woothemes_our_team .columns-4 .team-member.first,
+.widget_woothemes_our_team .columns-5 .team-member.first,
+.widget_woothemes_our_team .columns-6 .team-member.first {
+  clear: both;
+}
+.widget_woothemes_our_team .columns-2 .team-member.last,
+.widget_woothemes_our_team .columns-3 .team-member.last,
+.widget_woothemes_our_team .columns-4 .team-member.last,
+.widget_woothemes_our_team .columns-5 .team-member.last,
+.widget_woothemes_our_team .columns-6 .team-member.last {
+  margin-right: 0;
+}
+.widget_woothemes_our_team .columns-2 .team-member {
+  width: 48%;
+}
+.widget_woothemes_our_team .columns-3 .team-member {
+  width: 30.75%;
+}
+.widget_woothemes_our_team .columns-4 .team-member {
+  width: 22.05%;
+}
+.widget_woothemes_our_team .columns-5 .team-member {
+  width: 16.9%;
+}
+.widget_woothemes_our_team .columns-6 .team-member {
+  width: 13.5%;
+}
+/* END Woo Our Team styles */
+
+/* Woo Commerce Tweaks */
+.special-side .woocommerce ul.products li.product, .special-side .woocommerce-page ul.products li.product {width:80%;}
+
+/* Typography tweaking */
+.entry-title a {
+font-weight: normal;
+font-size: .75em;
+}
+
+dl {
+    padding: 0.5em;
+  }
+  dt {
+    float: left;
+    clear: left;
+    width: 125px;
+    text-align: right;
+    font-weight: bold;
+  }
+  dd {
+    margin: 0 0 0 135px;
+    padding: 0 0 0.5em 0;
+  }
+  .shadowtext {
+  	text-shadow: 1px 1px 1px rgba(10, 10, 10, 0.28);
+  }
+
+/* Directory CSS*/
+
+/*Typography*/
+.amt-directory-card p{
+	margin-bottom: 3px;
+	font-size: .80em;
+
+}
+h2.amt-dir-name{
+	font-size: 1.25em;
+	margin: 0;
+}
+.amt-dir-title {
+	font-style: italic;
+}
+
+.amt-dir-user-info a{
+	font-weight: normal;
+
+}
+.mad-skillz-hdr{
+	font-size: 1.1em;
+	color:#888888;
+	border-bottom: 1px solid #999999;
+}
+/*Generic layout things*/
+
+.amt-directory-card {
+	display: inline-block;
+	margin: 10px;
+	background-color: #ffffff;
+	-webkit-box-shadow: 0 0 5px 2px #dcdcdc;
+	box-shadow: 0 0 5px 2px #dcdcdc;
+}
+
+.amt-dir-mug{
+	display: block;
+}
+.amt-dir-user-info{
+	float: right;
+	margin-left:5px;
+	padding: 3px 3px 3px 0;
+}
+
+.amt-dir-img {
+	float: left;
+	width: 100%;
+	margin-top: 5px;
+	margin-left: 5px;
+    border-radius: 50%;
+
+}
+.img-circle {
+    border-radius: 50%;
+}
+
+
+/*layout single profile*/
+.amt-profile-single-container {
+	border-bottom: 1px solid #eaecee;
+	margin-bottom: 5px;
+}
+
+.amt-profile-mug{
+	display: block;
+	margin:0 auto 5px auto;
+	text-align: center;
+}
+
+.amt-profile-img {
+	border-radius: 50%;
+}
+.amt-profile-user-info{
+	padding: 3px 3px 3px 0;
+	margin: 0 auto 10px auto;
+}
+.amt-profile-user-info p{
+	font-size: .9em;
+	margin-bottom: 0;
+	text-align: center;
+}
+.amt-profile-user-info a {
+	font-weight: normal;
+}
+
+.amt-profile-sharing {
+}
+.amt-profile-sharing p{
+	font-size: .9em;
+}
+
+.amt-profile-single-name {
+	margin: 0px 0 3px 0;
+	text-align: center;
+	font-size: 2.2em;
+}
+.amt-profile-labels {
+	color: #999999;
+}
+
+.amtp-list-linked {
+	border-top: #eaecee 1px solid;
+	padding-top: 10px;
+}
+.amtp-h3-extras{
+	text-align: center;
+	color: #999999;
+	margin-bottom: 5px;
+}
+
+.ampt-post-block {
+	display: block;
+	overflow: auto;
+	margin:10px 0 0 0;
+}
+
+.ampt-post-th {
+	float: left;
+	width:120px;
+	background-color: #ffffff;
+	margin: 5px 5px 5px 5px;
+-webkit-box-shadow: 0px 0px 3px 1px rgba(0,0,0,0.2);
+-moz-box-shadow: 0px 0px 3px 1px rgba(0,0,0,0.2);
+box-shadow: 0px 0px 3px 1px rgba(0,0,0,0.2);
+
+}
+
+.ampt-post-deets {
+	margin-left:145px;
+}
+.left {
+	display: block;
+	float: left;
+}
+.right {
+	display: block;
+	float: right;
+}
+
+/* Layout + responsive switches*/
+@media only screen and (max-width: 520px) {
+    /* For phones*/
+    .amt-directory-card {
+	width: 100%;
+	-webkit-box-shadow: 0 0 0 0 #ffffff;
+	box-shadow: 0 0 0 0 #ffffff;
+	border-bottom: 1px solid #999999;
+}
+
+	.amt-dir-mug{
+		width: 100%;
+	}
+	.amt-dir-user-info{
+		width: 100%;
+		margin-left:5px;
+		padding: 0;
+
+	}
+	.amt-profile-mug{
+		width:80%;
+	}
+		.right {
+		width: 100%;
+	}
+	.left {
+		width: 100%;
+	}
+}
+
+
+@media only screen and (min-width: 521px) {
+    /* For phones*/
+    .amt-directory-card {
+	width: 100%;
+	}
+	.amt-dir-mug{
+		width: 20%;
+	}
+	.amt-dir-user-info{
+		width: 75%;
+	}
+
+	.amt-profile-mug{
+	width:30%;
+	}
+		.right {
+		width: 100%;
+	}
+	.left {
+		width: 100%;
+	}
+
+}
+@media only screen and (min-width: 768px) {
+    /* For desktop: */
+    .amt-directory-card {
+	width: 45%;
+	}
+	.amt-dir-mug{
+		width: 30%;
+	}
+	.amt-dir-user-info{
+		width: 65%;
+	}
+	.amt-profile-mug{
+	width:30%;
+	}
+	.right {
+		width: 45%;
+	}
+	.left {
+		width: 45%;
+	}
+}
+@media only screen and (min-width: 1024px) {
+    /* For tablets: */
+    .amt-directory-card {
+	width: 45%;
+	}
+	.amt-dir-mug{
+		width: 30%;
+	}
+	.amt-dir-user-info{
+		width: 65%;
+	}
+	.right {
+		width: 45%;
+	}
+	.left {
+		width: 45%;
+	}
+}
+
+/*framed in tools*/
+iframe:focus { 
+    outline: none;
+}
+
+iframe[seamless] { 
+    display: block;
+}
+
+/* woo commerce layout mods */
+
+.woocommerce ul.products li.product, .woocommerce-page ul.products li.product {margin: 0 10% 2.992em 5px;}
+
+/* woo out team mods*/
+
+/* -------------------------------------------------------------
+ * - Abandoned Orders -
+ * ------------------------------------------------------------- */
+#cart-reminder{
+	padding: 30px 45px;
+}
+#cart-reminder-title span{
+	color: #F7941E;
+}
+#cart-reminder a{
+	color: #CA7A19;
+	text-decoration: underline;
+}
+#cart-reminder a:hover{
+	color: #F7941E;
+}
+#cart-reminder p{
+	margin: 0;
+}
+.lity-container{
+	position: relative !important;
+}
+.lity-close{
+	position: absolute !important; top: -35px !important; right: 0 !important;
+	float: right !important;
+}
+.button.pay{
+	color: #FFF !important;
+	background: #FB961E !important;
+}
+.lity.lity-opened{
+	background: rgba(0,0,0,0.25) !important;
+}
+
+.notice{
+	padding: 10px;
+	font-size: 12px;
+	text-align: center;
+	color: #FFF;
+	background: #F7941D;
+}
+
+.notice a{
+	color: #FFF;
+}
+
+.notice a:hover,
+.notice a:focus{
+	color: #0395C1;
+}
+
+.notice big{
+	display: block;
+	margin: auto;
+	max-width: 1200px;
+	font-size: 20px;
+}
+
+@media( min-width: 768px ) {
+	.notice big{
+		font-size: 30px;
+	}
+}
+
+
+@media( min-width: 1024px ) {
+	.notice big{
+		font-size: 45px;
+	}
+}
+
+@media( min-width: 1366px ) {
+	.notice big{
+		font-size: 60px;
+	}
+}
